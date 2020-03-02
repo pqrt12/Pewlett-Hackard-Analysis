@@ -142,3 +142,31 @@ FROM (SELECT e.emp_no, e.first_name, e.last_name,
 -- how many are mentors?
 SELECT COUNT(emp_no) FROM mentors;
 -- 1549.
+
+--------------------------------------------------------------
+-- duplicate entries (same name and same birth_date)
+DROP TABLE IF EXISTS employee_dup;
+SELECT first_name, last_name, birth_date, count(*)
+INTO employee_dup
+FROM employees
+GROUP BY first_name, last_name, birth_date
+HAVING count(*) > 1;
+
+-- full employee info
+DROP TABLE IF EXISTS employee_dup_full;
+SELECT e.*
+INTO employee_dup_full
+FROM employees as e
+	inner join employee_dup as ed
+		on (e.first_name = ed.first_name)
+			and (e.last_name = ed.last_name)
+			and (e.birth_date = ed.birth_date)
+ORDER BY (e.first_name, e.last_name, e.hire_date);
+
+-- full employee info and "to_date"
+SELECT edf.*, t.to_date
+FROM employee_dup_full as edf
+	inner join titles as t
+		on (edf.emp_no = t.emp_no)
+	where (t.to_date = '9999-01-01')
+ORDER BY (edf.first_name, edf.last_name, edf.hire_date);
